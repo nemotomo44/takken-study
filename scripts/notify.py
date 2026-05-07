@@ -90,6 +90,7 @@ def build_embed(data):
     return embed
 
 def send_discord(embed, webhook_url):
+    webhook_url = webhook_url.replace("discordapp.com", "discord.com")
     payload = json.dumps({"embeds": [embed]}).encode("utf-8")
     req = urllib.request.Request(
         webhook_url,
