@@ -1,10 +1,9 @@
-name: 宅建学習 毎日LINE通知
+name: Takken Daily Notify
 
 on:
   schedule:
-    # 毎日 06:00 UTC = 15:00 JST
     - cron: "0 6 * * *"
-  workflow_dispatch:   # 手動実行ボタン（テスト用）
+  workflow_dispatch:
 
 jobs:
   notify:
@@ -21,5 +20,5 @@ jobs:
       - name: Send Discord notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          DASHBOARD_URL: "https://${{ github.repository_owner }}.github.io/takken-study/"
+          DASHBOARD_URL: "https://nemotomo44.github.io/takken-study/"
         run: python scripts/notify.py
