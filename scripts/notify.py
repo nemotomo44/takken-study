@@ -92,7 +92,9 @@ def build_embed(data):
 def send_discord(embed, webhook_url):
     webhook_url = webhook_url.strip().replace("discordapp.com", "discord.com")
     print(f"Webhook URL (masked): {webhook_url[:50]}...")
-    payload = json.dumps({"embeds": [embed]}).encode("utf-8")
+    # シンプルなテキストメッセージで送信
+    content = embed.get("description", "宅建学習リマインダー")
+    payload = json.dumps({"content": content}).encode("utf-8")
     req = urllib.request.Request(
         webhook_url,
         data=payload,
@@ -101,8 +103,9 @@ def send_discord(embed, webhook_url):
     )
     try:
         with urllib.request.urlopen(req) as res:
+            body = res.read()
             print(f"Discord response: {res.status}")
-            return res.status in (200, 204)
+            return res.status in (200, 204, 204)
     except urllib.error.HTTPError as e:
         print(f"HTTP Error: {e.code} {e.reason}")
         print(f"Response body: {e.read().decode('utf-8')}")
