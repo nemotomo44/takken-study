@@ -1,0 +1,25 @@
+name: 宅建学習 毎日LINE通知
+
+on:
+  schedule:
+    # 毎日 06:00 UTC = 15:00 JST
+    - cron: "0 6 * * *"
+  workflow_dispatch:   # 手動実行ボタン（テスト用）
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Send Discord notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DASHBOARD_URL: "https://${{ github.repository_owner }}.github.io/takken-study/"
+        run: python scripts/notify.py

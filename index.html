@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🏠 宅建学習ダッシュボード</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#0d1b2a;--card:#152334;--card2:#1a2d3e;--border:#1e3a52;
+  --text:#e8f0fe;--muted:#6b8fa8;
+  --rights:#40c4ff;--biz:#00e676;--law:#ffd740;--tax:#ff9100;--comp:#ce93d8;
+  --green:#00e676;--red:#ff5252;--yellow:#ffd740;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);padding:20px;min-height:100vh}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.hdr h1{font-size:24px;font-weight:700;background:linear-gradient(90deg,var(--rights),var(--comp));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr .sub{color:var(--muted);font-size:12px;margin-top:3px}
+.hdr .meta{text-align:right;color:var(--muted);font-size:12px;line-height:1.8}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.sc .ico{font-size:22px;margin-bottom:4px}.sc .val{font-size:30px;font-weight:700;margin-bottom:2px}.sc .lbl{font-size:11px;color:var(--muted)}
+.sc.gr .val{color:var(--green)}.sc.ye .val{color:var(--yellow)}.sc.bl .val{color:var(--rights)}.sc.rd .val{color:var(--red)}
+.grid-sec{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
+.sec-ttl{font-size:15px;font-weight:700;margin-bottom:14px}
+.cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.cat-label{min-width:90px;font-size:12px;color:var(--muted);text-align:right}
+.day-dots{display:flex;flex-wrap:wrap;gap:3px}
+.dot{width:16px;height:16px;border-radius:3px;cursor:default;transition:.15s}
+.dot:hover{transform:scale(1.4);z-index:10}
+.dot-done-hi{background:var(--green);opacity:.9}.dot-done-md{background:var(--yellow);opacity:.9}
+.dot-done-lo{background:var(--red);opacity:.9}.dot-pending{background:var(--border);opacity:.6}
+.dot-comp{background:var(--comp);opacity:.9}.dot-comp-pen{background:var(--border);border:1px solid var(--comp);opacity:.5}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-dot{width:12px;height:12px;border-radius:2px}
+.cat-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden}
+.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.cc.rights::before{background:var(--rights)}.cc.biz::before{background:var(--biz)}
+.cc.law::before{background:var(--law)}.cc.tax::before{background:var(--tax)}.cc.comp::before{background:var(--comp)}
+.cc .cat-ico{font-size:20px;margin-bottom:6px}
+.cc .cat-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.cc .cat-days{font-size:11px;color:var(--muted);margin-bottom:8px}
+.cc .prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.cc .prog-fill{height:100%;border-radius:3px;transition:width .6s}
+.cc .cat-stat{font-size:12px;display:flex;justify-content:space-between}
+.cc .cat-done{font-weight:700}.cc .cat-score{color:var(--muted)}
+.charts2{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px}
+.ccard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.ctitle{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ctitle::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px}
+.ctitle.rights::before{background:var(--rights)}.ctitle.all::before{background:var(--green)}
+.cat-section{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden}
+.cat-sec-hdr{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.cat-sec-hdr:hover{background:rgba(255,255,255,.03)}
+.cat-sec-left{display:flex;align-items:center;gap:12px}
+.cat-sec-ico{font-size:22px}
+.cat-sec-name{font-size:16px;font-weight:700}
+.cat-sec-range{font-size:12px;color:var(--muted);margin-top:2px}
+.cat-sec-right{display:flex;align-items:center;gap:12px}
+.prog-chip{font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px}
+.toggle-ico{color:var(--muted);font-size:16px;transition:.2s}
+.cat-sec-body{padding:20px;border-top:1px solid var(--border)}
+.cat-sec-body.hidden{display:none}
+.lock-box{text-align:center;padding:40px;color:var(--muted)}
+.lock-ico{font-size:40px;margin-bottom:10px}
+.lock-ttl{font-size:16px;font-weight:700;margin-bottom:6px}
+.lock-sub{font-size:13px}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 12px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);text-align:left}
+td{padding:11px 12px;font-size:13px;border-bottom:1px solid rgba(30,58,82,.5)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.bar-w{display:inline-block;width:80px;height:6px;background:var(--card2);border-radius:3px;vertical-align:middle;margin-right:6px;overflow:hidden}
+.bar-f{height:100%;border-radius:3px}
+.badge{display:inline-block;padding:2px 9px;border-radius:14px;font-size:12px;font-weight:600}
+.b-hi{background:rgba(0,230,118,.15);color:var(--green)}.b-md{background:rgba(64,196,255,.15);color:var(--rights)}
+.b-lo{background:rgba(255,215,64,.15);color:var(--yellow)}.b-ng{background:rgba(255,82,82,.15);color:var(--red)}
+.kq{display:inline-block;width:18px;height:18px;border-radius:3px;text-align:center;line-height:18px;font-size:10px;font-weight:700;margin:1px}
+.kq.ok{background:rgba(0,230,118,.2);color:var(--green)}.kq.ng{background:rgba(255,82,82,.2);color:var(--red)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:12px}
+.wi{background:rgba(255,82,82,.07);border:1px solid rgba(255,82,82,.2);border-radius:8px;padding:12px}
+.wi-h{font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px}
+.wi-d{font-size:11px;color:var(--muted);line-height:1.9}
+.wi-d .wa{color:var(--text);font-weight:600}.wi-d .wc{color:var(--green);font-weight:600}
+.vlinks{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+a.vbtn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:16px;text-decoration:none;font-size:12px;transition:.2s}
+a.vbtn.n{background:rgba(64,196,255,.1);border:1px solid rgba(64,196,255,.3);color:var(--rights)}
+a.vbtn.n:hover{background:rgba(64,196,255,.22)}
+a.vbtn.r{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.3);color:var(--red)}
+a.vbtn.r:hover{background:rgba(255,82,82,.22)}
+.comp-special{background:linear-gradient(135deg,rgba(206,147,216,.08),rgba(255,215,64,.06));border:1px solid rgba(206,147,216,.3);border-radius:14px;margin-bottom:20px}
+.comp-hdr{padding:20px;text-align:center;border-bottom:1px solid rgba(206,147,216,.2)}
+.comp-hdr .comp-ico{font-size:40px;margin-bottom:8px}
+.comp-hdr h2{font-size:20px;font-weight:700;background:linear-gradient(90deg,var(--comp),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.comp-hdr p{color:var(--muted);font-size:13px;margin-top:6px}
+.comp-body{padding:20px}
+.comp-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.comp-card{background:rgba(206,147,216,.07);border:1px solid rgba(206,147,216,.2);border-radius:10px;padding:14px;text-align:center}
+.comp-card .day-num{font-size:13px;font-weight:700;color:var(--comp);margin-bottom:4px}
+.comp-card .day-stat{font-size:22px;font-weight:700;margin-bottom:2px;color:var(--muted)}
+.comp-card .day-lbl{font-size:11px;color:var(--muted)}
+.comp-cross{margin-top:16px;padding:14px;background:rgba(206,147,216,.05);border:1px dashed rgba(206,147,216,.25);border-radius:8px;text-align:center;color:var(--muted);font-size:13px}
+.line-area{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+a.line-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(0,186,0,.14);border:1px solid rgba(0,186,0,.35);border-radius:10px;color:#06c755;text-decoration:none;font-size:14px;font-weight:600;transition:.2s}
+a.line-btn:hover{background:rgba(0,186,0,.26)}
+#loading{text-align:center;padding:60px;font-size:16px;color:var(--muted)}
+@media(max-width:1000px){.stats,.cat-overview{grid-template-columns:repeat(2,1fr)}.charts2{grid-template-columns:1fr}.comp-cards{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.cat-overview{grid-template-columns:1fr 1fr}.comp-cards{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="loading">📚 データを読み込んでいます...</div>
+<div id="app" style="display:none">
+
+<!-- Header -->
+<div class="hdr">
+  <div>
+    <h1>🏠 宅建学習ダッシュボード</h1>
+    <div class="sub">こざりえ宅建勉強合格講座 LINE学習アプリ ／ 全90日間コース</div>
+  </div>
+  <div class="meta"><div id="dateDisp"></div><div id="progressSummary"></div></div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="sc gr"><div class="ico">📊</div><div class="val" id="sv-rate">—</div><div class="lbl">総合正答率（完了分）</div></div>
+  <div class="sc ye"><div class="ico">⭐</div><div class="val" id="sv-perfect">—</div><div class="lbl">満点達成回数</div></div>
+  <div class="sc bl"><div class="ico">📅</div><div class="val" id="sv-days">—</div><div class="lbl">完了DAY / 全90日</div></div>
+  <div class="sc rd"><div class="ico">🔴</div><div class="val" id="sv-weak">—</div><div class="lbl">要復習問題数</div></div>
+</div>
+
+<!-- 90-Day Grid -->
+<div class="grid-sec">
+  <div class="sec-ttl">📅 90日間 学習マップ</div>
+  <div id="dayGrid"></div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>正答率80%以上</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--yellow)"></div>正答率67〜79%</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>正答率66%以下</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--border)"></div>未学習</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--comp)"></div>総合問題（完了）</div>
+  </div>
+</div>
+
+<!-- Category Overview -->
+<div class="cat-overview" id="catOverview"></div>
+
+<!-- Charts -->
+<div class="charts2">
+  <div class="ccard"><div class="ctitle rights">権利関係 DAY別正答率（DAY1〜34）</div><canvas id="rightsBar"></canvas></div>
+  <div class="ccard"><div class="ctitle all">カテゴリー別 理解度レーダー</div><canvas id="catRadar"></canvas></div>
+</div>
+
+<!-- 権利関係 -->
+<div class="cat-section" id="sec-rights">
+  <div class="cat-sec-hdr" onclick="toggle('rights')">
+    <div class="cat-sec-left">
+      <div class="cat-sec-ico">⚖️</div>
+      <div><div class="cat-sec-name" style="color:var(--rights)">権利関係</div><div class="cat-sec-range">DAY01〜DAY34（34日間）</div></div>
+    </div>
+    <div class="cat-sec-right">
+      <span class="prog-chip" id="chip-rights" style="background:rgba(64,196,255,.15);color:var(--rights)"></span>
+      <span class="toggle-ico" id="tog-rights">▲</span>
+    </div>
+  </div>
+  <div class="cat-sec-body" id="body-rights">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="ccard" style="padding:14px"><div class="ctitle rights">正解 vs 要復習</div><canvas id="rightsDoughnut" height="200"></canvas></div>
+      <div class="ccard" style="padding:14px"><div class="ctitle rights">累積ポイント推移</div><canvas id="rightsLine" height="200"></canvas></div>
+    </div>
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+      <tbody id="rights-tbody"></tbody></table>
+    </div>
+    <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
+    <div class="wgrid" id="rights-weak"></div>
+    <div class="sec-ttl" style="margin-top:16px;margin-bottom:8px">🎬 解説動画</div>
+    <div id="rights-videos"></div>
+  </div>
+</div>
+
+<!-- 宅建業関係 -->
+<div class="cat-section" id="sec-biz">
+  <div class="cat-sec-hdr" onclick="toggle('biz')">
+    <div class="cat-sec-left">
+      <div class="cat-sec-ico">🏢</div>
+      <div><div class="cat-sec-name" style="color:var(--biz)">宅建業関係</div><div class="cat-sec-range">DAY35〜DAY59（25日間）</div></div>
+    </div>
+    <div class="cat-sec-right">
+      <span class="prog-chip" id="chip-biz" style="background:rgba(0,230,118,.12);color:var(--biz)"></span>
+      <span class="toggle-ico" id="tog-biz">▼</span>
+    </div>
+  </div>
+  <div class="cat-sec-body hidden" id="body-biz">
+    <div class="lock-box"><div class="lock-ico">🔒</div><div class="lock-ttl">宅建業関係はDAY35から開始</div><div class="lock-sub">権利関係（DAY1〜34）完了後に解放されます</div></div>
+  </div>
+</div>
+
+<!-- 法令関係 -->
+<div class="cat-section" id="sec-law">
+  <div class="cat-sec-hdr" onclick="toggle('law')">
+    <div class="cat-sec-left">
+      <div class="cat-sec-ico">📋</div>
+      <div><div class="cat-sec-name" style="color:var(--law)">法令関係</div><div class="cat-sec-range">DAY60〜DAY76（17日間）</div></div>
+    </div>
+    <div class="cat-sec-right">
+      <span class="prog-chip" id="chip-law" style="background:rgba(255,215,64,.12);color:var(--law)"></span>
+      <span class="toggle-ico" id="tog-law">▼</span>
+    </div>
+  </div>
+  <div class="cat-sec-body hidden" id="body-law">
+    <div class="lock-box"><div class="lock-ico">🔒</div><div class="lock-ttl">法令関係はDAY60から開始</div><div class="lock-sub">宅建業関係（DAY35〜59）完了後に解放されます</div></div>
+  </div>
+</div>
+
+<!-- 税・価格 -->
+<div class="cat-section" id="sec-tax">
+  <div class="cat-sec-hdr" onclick="toggle('tax')">
+    <div class="cat-sec-left">
+      <div class="cat-sec-ico">💴</div>
+      <div><div class="cat-sec-name" style="color:var(--tax)">税・価格</div><div class="cat-sec-range">DAY77〜DAY85（9日間）</div></div>
+    </div>
+    <div class="cat-sec-right">
+      <span class="prog-chip" id="chip-tax" style="background:rgba(255,145,0,.12);color:var(--tax)"></span>
+      <span class="toggle-ico" id="tog-tax">▼</span>
+    </div>
+  </div>
+  <div class="cat-sec-body hidden" id="body-tax">
+    <div class="lock-box"><div class="lock-ico">🔒</div><div class="lock-ttl">税・価格はDAY77から開始</div><div class="lock-sub">法令関係（DAY60〜76）完了後に解放されます</div></div>
+  </div>
+</div>
+
+<!-- 総合問題 -->
+<div class="comp-special">
+  <div class="comp-hdr">
+    <div class="comp-ico">🎯</div>
+    <h2>総合問題 — 最終確認テスト</h2>
+    <p>DAY86〜DAY90（5日間）／ 全4カテゴリーを横断した総仕上げ問題です</p>
+  </div>
+  <div class="comp-body">
+    <div class="comp-cards" id="compCards"></div>
+    <div class="comp-cross" id="compCross">
+      🔒 総合問題はDAY86から開始できます。<br>
+      全カテゴリー完了後に解放されます。
+    </div>
+  </div>
+</div>
+
+<!-- LINE -->
+<div class="line-area">
+  <div>
+    <div style="font-weight:700;margin-bottom:4px">📱 今日の問題へ</div>
+    <div style="font-size:12px;color:var(--muted)">LINEアプリの「学習する ▶」ボタンから今日のDAYに挑戦しましょう</div>
+  </div>
+  <a class="line-btn" href="line://">🟢 LINE アプリを開く</a>
+</div>
+
+</div><!-- #app -->
+
+<script>
+const CATS = [
+  {id:'rights',name:'権利関係',  icon:'⚖️', color:'var(--rights)',rgb:'64,196,255', range:[1,34]},
+  {id:'biz',   name:'宅建業関係',icon:'🏢', color:'var(--biz)',   rgb:'0,230,118',  range:[35,59]},
+  {id:'law',   name:'法令関係',  icon:'📋', color:'var(--law)',   rgb:'255,215,64', range:[60,76]},
+  {id:'tax',   name:'税・価格', icon:'💴', color:'var(--tax)',   rgb:'255,145,0',  range:[77,85]},
+  {id:'comp',  name:'総合問題',  icon:'🎯', color:'var(--comp)',  rgb:'206,147,216',range:[86,90]}
+];
+
+const pct = (c,t)=>Math.round(c/t*1000)/10;
+const dotColor = r => r>=80?'dot-done-hi':r>=67?'dot-done-md':'dot-done-lo';
+const badgeClass = r => r===100?'b-hi':r>=78?'b-md':r>=67?'b-lo':'b-ng';
+const barFillColor = r => r>=80?'rgba(0,230,118,.8)':r>=67?'rgba(255,215,64,.8)':'rgba(255,82,82,.8)';
+
+function toggle(id){
+  const body=document.getElementById('body-'+id);
+  const ico=document.getElementById('tog-'+id);
+  if(body.classList.contains('hidden')){body.classList.remove('hidden');ico.textContent='▲';}
+  else{body.classList.add('hidden');ico.textContent='▼';}
+}
+
+fetch('data.json')
+  .then(r=>r.json())
+  .then(DATA=>{
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='';
+    init(DATA.days);
+  })
+  .catch(e=>{
+    document.getElementById('loading').textContent='⚠️ データの読み込みに失敗しました。GitHubPages 上で開いてください。';
+    console.error(e);
+  });
+
+function init(days){
+  const completedMap = new Map(days.map(d=>[d.day,d]));
+
+  document.getElementById('dateDisp').textContent = '更新日: '+new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const totalDone = days.length;
+  document.getElementById('progressSummary').textContent = `完了: DAY${totalDone} ／ 全90日`;
+
+  const totC=days.reduce((s,d)=>s+d.correct,0);
+  const totQ=days.reduce((s,d)=>s+d.total,0);
+  const totW=totQ-totC;
+  const perfectDays=days.filter(d=>d.correct===d.total).length;
+  document.getElementById('sv-rate').textContent=pct(totC,totQ)+'%';
+  document.getElementById('sv-perfect').textContent=perfectDays+'回';
+  document.getElementById('sv-days').textContent=totalDone+'/90';
+  document.getElementById('sv-weak').textContent=totW+'問';
+
+  // 90日グリッド
+  const grid=document.getElementById('dayGrid');
+  CATS.forEach(cat=>{
+    const row=document.createElement('div');row.className='cat-row';
+    const lbl=document.createElement('div');lbl.className='cat-label';
+    lbl.style.color=cat.color;lbl.textContent=cat.name;
+    const dots=document.createElement('div');dots.className='day-dots';
+    for(let d=cat.range[0];d<=cat.range[1];d++){
+      const dot=document.createElement('div');dot.className='dot';
+      const data=completedMap.get(d);
+      if(data){
+        const r=pct(data.correct,data.total);
+        dot.className='dot '+(cat.id==='comp'?'dot-comp':dotColor(r));
+        dot.title=`DAY${d} ${data.topic}: ${data.correct}/${data.total}(${r}%)`;
+      } else {
+        dot.className='dot '+(cat.id==='comp'?'dot-comp-pen':'dot-pending');
+        dot.title=`DAY${d}: 未学習`;
+      }
+      dots.appendChild(dot);
+    }
+    row.appendChild(lbl);row.appendChild(dots);grid.appendChild(row);
+  });
+
+  // カテゴリーカード
+  const catOv=document.getElementById('catOverview');
+  CATS.forEach(cat=>{
+    const catDays=days.filter(d=>d.day>=cat.range[0]&&d.day<=cat.range[1]);
+    const total=cat.range[1]-cat.range[0]+1;
+    const done=catDays.length;
+    const progPct=Math.round(done/total*100);
+    const div=document.createElement('div');div.className=`cc ${cat.id}`;
+    div.innerHTML=`<div class="cat-ico">${cat.icon}</div>
+<div class="cat-name" style="color:${cat.color}">${cat.name}</div>
+<div class="cat-days">DAY${cat.range[0]}〜DAY${cat.range[1]}（${total}日）</div>
+<div class="prog-bar"><div class="prog-fill" style="width:${progPct}%;background:${cat.color}"></div></div>
+<div class="cat-stat"><span class="cat-done" style="color:${cat.color}">${done}/${total}日</span><span class="cat-score">${progPct}%</span></div>`;
+    catOv.appendChild(div);
+    const chip=document.getElementById('chip-'+cat.id);
+    if(chip) chip.textContent=done>0?`${done}/${total}日 (${progPct}%)`:done+'/'+total+'日';
+  });
+
+  // 棒グラフ
+  (()=>{
+    const labels=[],scores=[],colors=[];
+    for(let d=1;d<=34;d++){
+      labels.push('DAY'+d);
+      const data=completedMap.get(d);
+      scores.push(data?pct(data.correct,data.total):0);
+      colors.push(data?barFillColor(pct(data.correct,data.total)):'rgba(30,58,82,.5)');
+    }
+    new Chart(document.getElementById('rightsBar'),{
+      type:'bar',
+      data:{labels,datasets:[{label:'正答率(%)',data:scores,backgroundColor:colors,borderColor:colors,borderWidth:1,borderRadius:3}]},
+      options:{responsive:true,plugins:{legend:{display:false}},
+        scales:{y:{min:0,max:100,ticks:{color:'#6b8fa8',callback:v=>v+'%'},grid:{color:'rgba(30,58,82,.5)'},border:{color:'transparent'}},
+                x:{ticks:{color:'#6b8fa8',font:{size:9}},grid:{display:false},border:{color:'transparent'}}}}
+    });
+  })();
+
+  // レーダー
+  (()=>{
+    const scores=CATS.map(cat=>{
+      const catDays=days.filter(d=>d.day>=cat.range[0]&&d.day<=cat.range[1]);
+      return catDays.length>0?pct(catDays.reduce((s,d)=>s+d.correct,0),catDays.reduce((s,d)=>s+d.total,0)):0;
+    });
+    new Chart(document.getElementById('catRadar'),{
+      type:'radar',
+      data:{labels:CATS.map(c=>c.name),datasets:[{label:'正答率(%)',data:scores,
+        backgroundColor:'rgba(0,230,118,.12)',borderColor:'rgba(0,230,118,.7)',
+        pointBackgroundColor:'rgba(0,230,118,1)',pointBorderColor:'#fff',pointRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},
+        scales:{r:{min:0,max:100,ticks:{stepSize:25,color:'#6b8fa8',backdropColor:'transparent'},
+          grid:{color:'rgba(30,58,82,.6)'},pointLabels:{color:'#6b8fa8',font:{size:11}},
+          angleLines:{color:'rgba(30,58,82,.6)'}}}}
+    });
+  })();
+
+  // 権利関係 詳細
+  (()=>{
+    const rDays=days.filter(d=>d.day<=34);
+    const rC=rDays.reduce((s,d)=>s+d.correct,0);
+    const rQ=rDays.reduce((s,d)=>s+d.total,0);
+    new Chart(document.getElementById('rightsDoughnut'),{
+      type:'doughnut',
+      data:{labels:['正解','要復習'],datasets:[{data:[rC,rQ-rC],
+        backgroundColor:['rgba(0,230,118,.75)','rgba(255,82,82,.75)'],
+        borderColor:['rgba(0,230,118,1)','rgba(255,82,82,1)'],borderWidth:2}]},
+      options:{responsive:true,cutout:'60%',plugins:{legend:{labels:{color:'#e8f0fe',font:{size:12}}}}}
+    });
+    const accData=[];let running=0;
+    rDays.forEach(d=>{running+=d.correct;accData.push(running);});
+    new Chart(document.getElementById('rightsLine'),{
+      type:'line',
+      data:{labels:rDays.map(d=>'DAY'+d.day),
+        datasets:[{label:'累積正解数',data:accData,
+          borderColor:'rgba(255,215,64,.9)',backgroundColor:'rgba(255,215,64,.08)',
+          tension:.4,fill:true,pointBackgroundColor:'#ffd740',pointRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},
+        scales:{y:{ticks:{color:'#6b8fa8'},grid:{color:'rgba(30,58,82,.5)'},border:{color:'transparent'}},
+                x:{ticks:{color:'#6b8fa8'},grid:{display:false},border:{color:'transparent'}}}}
+    });
+    const tbody=document.getElementById('rights-tbody');
+    rDays.forEach(d=>{
+      const r=pct(d.correct,d.total),w=d.total-d.correct;
+      const vLinks=(d.videos||[]).map((v,i)=>`<a href="${v}" target="_blank" class="vbtn n" style="font-size:10px">▶ 知識${i+1}</a>`).join('');
+      tbody.innerHTML+=`<tr><td><b>DAY${d.day}</b></td><td>${d.topic}</td><td style="color:var(--muted)">${d.date}</td>
+<td><span class="badge ${badgeClass(r)}">${d.correct}/${d.total}(${r}%)</span></td>
+<td><div class="bar-w"><div class="bar-f" style="width:${r}%;background:${barFillColor(r)}"></div></div></td>
+<td style="color:${w>0?'var(--red)':'var(--green)'}">${w>0?w+'問':'—'}</td>
+<td><div class="vlinks">${vLinks}</div></td></tr>`;
+    });
+    const vc=document.getElementById('rights-videos');
+    rDays.forEach(d=>{
+      const lh=(d.videos||[]).map((v,i)=>`<a href="${v}" target="_blank" class="vbtn n">▶ DAY${d.day} 知識${i+1}</a>`).join('');
+      vc.innerHTML+=`<div style="margin-bottom:10px"><span style="font-size:13px;font-weight:700;margin-right:8px">DAY${d.day} ${d.topic}</span><span class="badge ${badgeClass(pct(d.correct,d.total))}">${d.correct}/${d.total}</span><div class="vlinks" style="margin-top:6px">${lh}</div></div>`;
+    });
+  })();
+
+  // 総合問題カード
+  (()=>{
+    const compCards=document.getElementById('compCards');
+    for(let d=86;d<=90;d++){
+      const data=completedMap.get(d);
+      compCards.innerHTML+=`<div class="comp-card"><div class="day-num">DAY${d}</div>${data?`<div class="day-stat" style="color:var(--comp)">${pct(data.correct,data.total)}%</div><div class="day-lbl">${data.correct}/${data.total}問正解</div>`:`<div class="day-stat">—</div><div class="day-lbl">未学習</div>`}</div>`;
+    }
+  })();
+}
+</script>
+</body>
+</html>
