@@ -90,7 +90,8 @@ def build_embed(data):
     return embed
 
 def send_discord(embed, webhook_url):
-    webhook_url = webhook_url.replace("discordapp.com", "discord.com")
+    webhook_url = webhook_url.strip().replace("discordapp.com", "discord.com")
+    print(f"Webhook URL (masked): {webhook_url[:50]}...")
     payload = json.dumps({"embeds": [embed]}).encode("utf-8")
     req = urllib.request.Request(
         webhook_url,
@@ -98,9 +99,14 @@ def send_discord(embed, webhook_url):
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req) as res:
-        print(f"Discord response: {res.status}")
-        return res.status in (200, 204)
+    try:
+        with urllib.request.urlopen(req) as res:
+            print(f"Discord response: {res.status}")
+            return res.status in (200, 204)
+    except urllib.error.HTTPError as e:
+        print(f"HTTP Error: {e.code} {e.reason}")
+        print(f"Response body: {e.read().decode('utf-8')}")
+        raise
 
 def main():
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
