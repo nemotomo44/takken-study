@@ -25,6 +25,18 @@
     {"day": 7, "topic": "債務不履行",    "date": "2026-05-06", "correct": 6, "total": 9,
      "videos": ["https://lstep.app/lpCSi7G","https://lstep.app/WHbCktm","https://lstep.app/zGzqziD"]},
     {"day": 8, "topic": "手付・解除",   "date": "2026-05-07", "correct": 7, "total": 9,
-     "videos": ["https://lstep.app/PeScpah","https://lstep.app/qVHdEeq","https://lstep.app/lbWGsS1"]}
+     "videos": ["https://lstep.app/PeScpah","https://lstep.app/qVHdEeq","https://lstep.app/lbWGsS1"]},
+    {"day": 9, "topic": "危険負担",      "date": "2026-05-08", "correct": 6, "total": 9,
+     "videos": ["https://lstep.app/VJJr8hP","https://lstep.app/pasmMCW","https://lstep.app/GlrMkKp"]},
+    {"day": 10, "topic": "契約不適合責任","date": "2026-05-09", "correct": 9, "total": 9,
+     "videos": ["https://lstep.app/JktFtKh","https://lstep.app/Dbk3HFS","https://lstep.app/yJhOTCZ"]},
+    {"day": 11, "topic": "抵当権①",     "date": "2026-05-10", "correct": 8, "total": 9,
+     "videos": ["https://lstep.app/v5NT5tV","https://lstep.app/Xx6j8p3","https://lstep.app/bCY2oXj"]},
+    {"day": 12, "topic": "抵当権②",     "date": "2026-05-11", "correct": 8, "total": 9,
+     "videos": ["https://lstep.app/fG08xk8","https://lstep.app/e4XxZo6","https://lstep.app/ZgKwOcH"]},
+    {"day": 13, "topic": "連帯債務",     "date": "2026-05-12", "correct": 6, "total": 9,
+     "videos": ["https://lstep.app/GRdwNNq","https://lstep.app/P0etedq","https://lstep.app/laOeQcv"]},
+    {"day": 14, "topic": "保証・連帯保証","date": "2026-05-13", "correct": 8, "total": 9,
+     "videos": ["https://lstep.app/x9Ax6mf","https://lstep.app/lS2jqeF","https://lstep.app/ZcYZWVO"]}
   ]
 }
