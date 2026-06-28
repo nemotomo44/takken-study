@@ -17,10 +17,10 @@ body{font-family:'Segoe UI','Noto Sans JP',sans-serif;background:var(--bg);color
 .hdr h1{font-size:24px;font-weight:700;background:linear-gradient(90deg,var(--rights),var(--comp));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .hdr .sub{color:var(--muted);font-size:12px;margin-top:3px}
 .hdr .meta{text-align:right;color:var(--muted);font-size:12px;line-height:1.8}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
 .sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
 .sc .ico{font-size:22px;margin-bottom:4px}.sc .val{font-size:30px;font-weight:700;margin-bottom:2px}.sc .lbl{font-size:11px;color:var(--muted)}
-.sc.gr .val{color:var(--green)}.sc.ye .val{color:var(--yellow)}.sc.bl .val{color:var(--rights)}.sc.rd .val{color:var(--red)}
+.sc.gr .val{color:var(--green)}.sc.ye .val{color:var(--yellow)}.sc.bl .val{color:var(--rights)}.sc.rd .val{color:var(--red)}.sc.or .val{color:#ffa726}
 .grid-sec{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
 .sec-ttl{font-size:15px;font-weight:700;margin-bottom:14px}
 .cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -105,7 +105,8 @@ a.vbtn.r:hover{background:rgba(255,82,82,.22)}
 a.line-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(0,186,0,.14);border:1px solid rgba(0,186,0,.35);border-radius:10px;color:#06c755;text-decoration:none;font-size:14px;font-weight:600;transition:.2s}
 a.line-btn:hover{background:rgba(0,186,0,.26)}
 #loading{text-align:center;padding:60px;font-size:16px;color:var(--muted)}
-@media(max-width:1000px){.stats,.cat-overview{grid-template-columns:repeat(2,1fr)}.charts2{grid-template-columns:1fr}.comp-cards{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1000px){.stats{grid-template-columns:repeat(3,1fr)}.cat-overview{grid-template-columns:repeat(2,1fr)}.charts2{grid-template-columns:1fr}.comp-cards{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.cat-overview{grid-template-columns:1fr 1fr}.comp-cards{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -127,8 +128,9 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
 <div class="stats">
   <div class="sc gr"><div class="ico">📊</div><div class="val" id="sv-rate">—</div><div class="lbl">総合正答率（完了分）</div></div>
   <div class="sc ye"><div class="ico">⭐</div><div class="val" id="sv-perfect">—</div><div class="lbl">満点達成回数</div></div>
-  <div class="sc bl"><div class="ico">📅</div><div class="val" id="sv-days">—</div><div class="lbl" id="sv-days-lbl">完了DAY / 全90日</div></div>
-  <div class="sc rd"><div class="ico">🔴</div><div class="val" id="sv-weak">—</div><div class="lbl">要復習問題数</div></div>
+  <div class="sc bl"><div class="ico">✅</div><div class="val" id="sv-days">—</div><div class="lbl">完了DAY / 全90日</div></div>
+  <div class="sc or"><div class="ico">⏳</div><div class="val" id="sv-inprog">—</div><div class="lbl">対応中DAY / 全90日</div></div>
+  <div class="sc rd"><div class="ico">🔴</div><div class="val" id="sv-weak">—</div><div class="lbl">要復習問題数（対応中）</div></div>
 </div>
 
 <!-- 90-Day Grid -->
@@ -301,14 +303,16 @@ function init(days){
 
   const totC=days.reduce((s,d)=>s+d.correct,0);
   const totQ=days.reduce((s,d)=>s+d.total,0);
-  const totW=totQ-totC;
   const perfectDays=days.filter(d=>d.correct===d.total).length;
-  const completedDays=days.filter(d=>pct(d.correct,d.total)>=80).length;
-  const inProgressDays=days.length-completedDays;
+  const completedDaysArr=days.filter(d=>pct(d.correct,d.total)>=80);
+  const inProgressDaysArr=days.filter(d=>pct(d.correct,d.total)<80);
+  const completedDays=completedDaysArr.length;
+  const inProgressDays=inProgressDaysArr.length;
+  const totW=inProgressDaysArr.reduce((s,d)=>s+(d.total-d.correct),0);
   document.getElementById('sv-rate').textContent=pct(totC,totQ)+'%';
   document.getElementById('sv-perfect').textContent=perfectDays+'回';
   document.getElementById('sv-days').textContent=completedDays+'/90';
-  document.getElementById('sv-days-lbl').textContent='完了DAY（対応中: '+inProgressDays+'日）/ 全90日';
+  document.getElementById('sv-inprog').textContent=inProgressDays+'/90';
   document.getElementById('sv-weak').textContent=totW+'問';
 
   // 90日グリッド
