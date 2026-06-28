@@ -127,7 +127,7 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
 <div class="stats">
   <div class="sc gr"><div class="ico">📊</div><div class="val" id="sv-rate">—</div><div class="lbl">総合正答率（完了分）</div></div>
   <div class="sc ye"><div class="ico">⭐</div><div class="val" id="sv-perfect">—</div><div class="lbl">満点達成回数</div></div>
-  <div class="sc bl"><div class="ico">📅</div><div class="val" id="sv-days">—</div><div class="lbl">完了DAY / 全90日</div></div>
+  <div class="sc bl"><div class="ico">📅</div><div class="val" id="sv-days">—</div><div class="lbl" id="sv-days-lbl">完了DAY / 全90日</div></div>
   <div class="sc rd"><div class="ico">🔴</div><div class="val" id="sv-weak">—</div><div class="lbl">要復習問題数</div></div>
 </div>
 
@@ -303,9 +303,12 @@ function init(days){
   const totQ=days.reduce((s,d)=>s+d.total,0);
   const totW=totQ-totC;
   const perfectDays=days.filter(d=>d.correct===d.total).length;
+  const completedDays=days.filter(d=>pct(d.correct,d.total)>=80).length;
+  const inProgressDays=days.length-completedDays;
   document.getElementById('sv-rate').textContent=pct(totC,totQ)+'%';
   document.getElementById('sv-perfect').textContent=perfectDays+'回';
-  document.getElementById('sv-days').textContent=totalDone+'/90';
+  document.getElementById('sv-days').textContent=completedDays+'/90';
+  document.getElementById('sv-days-lbl').textContent='完了DAY（対応中: '+inProgressDays+'日）/ 全90日';
   document.getElementById('sv-weak').textContent=totW+'問';
 
   // 90日グリッド
@@ -346,7 +349,21 @@ function init(days){
 <div class="cat-stat"><span class="cat-done" style="color:${cat.color}">${done}/${total}日</span><span class="cat-score">${progPct}%</span></div>`;
     catOv.appendChild(div);
     const chip=document.getElementById('chip-'+cat.id);
-    if(chip) chip.textContent=done>0?`${done}/${total}日 (${progPct}%)`:done+'/'+total+'日';
+    if(chip){
+      if(progPct===100){
+        chip.textContent=`✓ 完了 ${done}/${total}日`;
+        chip.style.background='rgba(0,230,118,.2)';
+        chip.style.color='var(--green)';
+      } else if(done>0){
+        chip.textContent=`⏳ 対応中 ${done}/${total}日 (${progPct}%)`;
+        chip.style.background='rgba(255,167,38,.15)';
+        chip.style.color='#ffa726';
+      } else {
+        chip.textContent='未着手';
+        chip.style.background='rgba(107,143,168,.12)';
+        chip.style.color='var(--muted)';
+      }
+    }
   });
 
   // 棒グラフ
