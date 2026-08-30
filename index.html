@@ -196,7 +196,12 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
     </div>
   </div>
   <div class="cat-sec-body hidden" id="body-biz">
-    <div class="lock-box"><div class="lock-ico">🔒</div><div class="lock-ttl">宅建業関係はDAY35から開始</div><div class="lock-sub">権利関係（DAY1〜34）完了後に解放されます</div></div>
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+      <tbody id="biz-tbody"></tbody></table>
+    </div>
+    <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
+    <div class="wgrid" id="biz-weak"></div>
   </div>
 </div>
 
@@ -213,7 +218,12 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
     </div>
   </div>
   <div class="cat-sec-body hidden" id="body-law">
-    <div class="lock-box"><div class="lock-ico">🔒</div><div class="lock-ttl">法令関係はDAY60から開始</div><div class="lock-sub">宅建業関係（DAY35〜59）完了後に解放されます</div></div>
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+      <tbody id="law-tbody"></tbody></table>
+    </div>
+    <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
+    <div class="wgrid" id="law-weak"></div>
   </div>
 </div>
 
@@ -230,7 +240,12 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
     </div>
   </div>
   <div class="cat-sec-body hidden" id="body-tax">
-    <div class="lock-box"><div class="lock-ico">🔒</div><div class="lock-ttl">税・価格はDAY77から開始</div><div class="lock-sub">法令関係（DAY60〜76）完了後に解放されます</div></div>
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+      <tbody id="tax-tbody"></tbody></table>
+    </div>
+    <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
+    <div class="wgrid" id="tax-weak"></div>
   </div>
 </div>
 
@@ -287,7 +302,8 @@ fetch('data.json')
   .then(DATA=>{
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='';
-    init(DATA.days);
+    const days = Array.isArray(DATA) ? DATA : (DATA.days || []);
+    init(days);
   })
   .catch(e=>{
     document.getElementById('loading').textContent='⚠️ データの読み込みに失敗しました。GitHubPages 上で開いてください。';
@@ -446,6 +462,43 @@ function init(days){
       vc.innerHTML+=`<div style="margin-bottom:10px"><span style="font-size:13px;font-weight:700;margin-right:8px">DAY${d.day} ${d.topic}</span><span class="badge ${badgeClass(pct(d.correct,d.total))}">${d.correct}/${d.total}</span><div class="vlinks" style="margin-top:6px">${lh}</div></div>`;
     });
   })();
+
+  // 各カテゴリー表・弱点グリッド描画
+  function buildCatSection(tbodyId, weakId, range){
+    const catDays=days.filter(d=>d.day>=range[0]&&d.day<=range[1]);
+    const tbody=document.getElementById(tbodyId);
+    const wg=document.getElementById(weakId);
+    if(!tbody)return;
+    catDays.forEach(d=>{
+      const r=pct(d.correct,d.total),w=d.total-d.correct;
+      const vLinks=(d.videos||[]).map((v,i)=>`<a href="${v}" target="_blank" class="vbtn n" style="font-size:10px">▶ 知識${i+1}</a>`).join('');
+      tbody.innerHTML+=`<tr><td><b>DAY${d.day}</b></td><td>${d.topic}</td><td style="color:var(--muted)">${d.date}</td>
+<td><span class="badge ${badgeClass(r)}">${d.correct}/${d.total}(${r}%)</span></td>
+<td><div class="bar-w"><div class="bar-f" style="width:${r}%;background:${barFillColor(r)}"></div></div></td>
+<td style="color:${w>0?'var(--red)':'var(--green)'}">${w>0?w+'問':'—'}</td>
+<td><div class="vlinks">${vLinks}</div></td></tr>`;
+    });
+    if(wg){
+      catDays.filter(d=>d.correct<d.total).forEach(d=>{
+        const lh=(d.videos||[]).map((v,i)=>`<a href="${v}" target="_blank" class="vbtn n">▶ DAY${d.day} 知識${i+1}</a>`).join('');
+        wg.innerHTML+=`<div class="wi"><div class="wi-h">DAY${d.day} ${d.topic}</div>
+<div class="wi-d">正解 <span class="wc">${d.correct}問</span> ／ 要復習 <span class="wa">${d.total-d.correct}問</span> ／ ${d.date}</div>
+<div class="vlinks">${lh}</div></div>`;
+      });
+    }
+  }
+  buildCatSection('biz-tbody','biz-weak',[35,59]);
+  buildCatSection('law-tbody','law-weak',[60,76]);
+  buildCatSection('tax-tbody','tax-weak',[77,85]);
+
+  // 要復習エリアが空なら非表示
+  ['biz','law','tax'].forEach(id=>{
+    const wg=document.getElementById(id+'-weak');
+    if(wg&&wg.innerHTML.trim()===''){
+      const ttl=wg.previousElementSibling;
+      if(ttl)ttl.style.display='none';
+    }
+  });
 
   // 総合問題カード
   (()=>{
