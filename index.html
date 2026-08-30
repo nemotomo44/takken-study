@@ -196,9 +196,12 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
     </div>
   </div>
   <div class="cat-sec-body hidden" id="body-biz">
-    <div style="overflow-x:auto;margin-bottom:16px">
-      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
-      <tbody id="biz-tbody"></tbody></table>
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:16px;align-items:start">
+      <div class="ccard" style="padding:14px"><div class="ctitle" style="color:var(--biz)">正解 vs 要復習</div><canvas id="bizDoughnut" height="180"></canvas></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+        <tbody id="biz-tbody"></tbody></table>
+      </div>
     </div>
     <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
     <div class="wgrid" id="biz-weak"></div>
@@ -218,9 +221,12 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
     </div>
   </div>
   <div class="cat-sec-body hidden" id="body-law">
-    <div style="overflow-x:auto;margin-bottom:16px">
-      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
-      <tbody id="law-tbody"></tbody></table>
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:16px;align-items:start">
+      <div class="ccard" style="padding:14px"><div class="ctitle" style="color:var(--law)">正解 vs 要復習</div><canvas id="lawDoughnut" height="180"></canvas></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+        <tbody id="law-tbody"></tbody></table>
+      </div>
     </div>
     <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
     <div class="wgrid" id="law-weak"></div>
@@ -240,9 +246,12 @@ a.line-btn:hover{background:rgba(0,186,0,.26)}
     </div>
   </div>
   <div class="cat-sec-body hidden" id="body-tax">
-    <div style="overflow-x:auto;margin-bottom:16px">
-      <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
-      <tbody id="tax-tbody"></tbody></table>
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:16px;align-items:start">
+      <div class="ccard" style="padding:14px"><div class="ctitle" style="color:var(--tax)">正解 vs 要復習</div><canvas id="taxDoughnut" height="180"></canvas></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>DAY</th><th>テーマ</th><th>日付</th><th>正答率</th><th>進捗</th><th>要復習</th><th>動画</th></tr></thead>
+        <tbody id="tax-tbody"></tbody></table>
+      </div>
     </div>
     <div class="sec-ttl" style="margin-bottom:0">🔴 要復習エリア</div>
     <div class="wgrid" id="tax-weak"></div>
@@ -463,8 +472,21 @@ function init(days){
     });
   })();
 
+  // ドーナツチャート生成ヘルパー
+  function makeDoughnut(canvasId, correct, wrong, color){
+    const el=document.getElementById(canvasId);
+    if(!el)return;
+    new Chart(el,{
+      type:'doughnut',
+      data:{labels:['正解','要復習'],datasets:[{data:[correct,wrong],
+        backgroundColor:['rgba(0,230,118,.75)',`rgba(${color},.55)`],
+        borderColor:['rgba(0,230,118,1)',`rgba(${color},1)`],borderWidth:2}]},
+      options:{responsive:true,cutout:'60%',plugins:{legend:{labels:{color:'#e8f0fe',font:{size:11}}}}}
+    });
+  }
+
   // 各カテゴリー表・弱点グリッド描画
-  function buildCatSection(tbodyId, weakId, range){
+  function buildCatSection(tbodyId, weakId, range, doughnutId, doughnutColor){
     const catDays=days.filter(d=>d.day>=range[0]&&d.day<=range[1]);
     const tbody=document.getElementById(tbodyId);
     const wg=document.getElementById(weakId);
@@ -486,10 +508,15 @@ function init(days){
 <div class="vlinks">${lh}</div></div>`;
       });
     }
+    if(doughnutId){
+      const totC=catDays.reduce((s,d)=>s+d.correct,0);
+      const totW=catDays.reduce((s,d)=>s+(d.total-d.correct),0);
+      makeDoughnut(doughnutId,totC,totW,doughnutColor);
+    }
   }
-  buildCatSection('biz-tbody','biz-weak',[35,59]);
-  buildCatSection('law-tbody','law-weak',[60,76]);
-  buildCatSection('tax-tbody','tax-weak',[77,85]);
+  buildCatSection('biz-tbody','biz-weak',[35,59],'bizDoughnut','255,82,82');
+  buildCatSection('law-tbody','law-weak',[60,76],'lawDoughnut','255,82,82');
+  buildCatSection('tax-tbody','tax-weak',[77,85],'taxDoughnut','255,82,82');
 
   // 要復習エリアが空なら非表示
   ['biz','law','tax'].forEach(id=>{
